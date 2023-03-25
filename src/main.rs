@@ -202,6 +202,7 @@ fn ask_action(moves: &HashMap<Direction, Cell>) -> Action {
         "Q" => Quit,
         _ => {
             println!("Unknown action: {action}");
+            //print!("\x1B[2J\x1B[1;1H");
             ask_action(moves)
         }
     }
