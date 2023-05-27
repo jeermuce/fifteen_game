@@ -1,5 +1,5 @@
 extern crate rand;
-
+use clearscreen::clear;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -149,48 +149,53 @@ fn main() {
 
     for turns in 1.. {
         println!("{p15}");
-        match ask_action(&p15.get_moves()) {
+        match ask_action(&p15.get_moves(), true) {
             Action::Move(direction) => {
                 p15.play(&direction);
-                print!("\x1B[2J\x1B[1;1H");
+                clear().expect("failed to clear screen");
             }
             Action::Quit => {
-                print!("\x1B[2J\x1B[1;1H");
+                clear().expect("failed to clear screen");
 
-                println!("Bye !");
+                println!("Bye!");
                 break;
             }
         }
 
         if p15.is_complete() {
-            println!("Well done ! You won in {turns} turns");
+            println!("Well done! You won in {turns} turns");
             break;
         }
     }
 }
 
-fn ask_action(moves: &HashMap<Direction, Cell>) -> Action {
+fn ask_action(moves: &HashMap<Direction, Cell>, render_list: bool) -> Action {
     use std::io::{self, Write};
     use Action::*;
     use Direction::*;
 
-    println!("Possible moves:");
+    if render_list {
+        println!("Possible moves:");
 
-    if let Some(&Cell::Card(value)) = moves.get(&Up) {
-        println!("\tU) {value}");
+        if let Some(&Cell::Card(value)) = moves.get(&Up) {
+            println!("\tU) {value}");
+        }
+        if let Some(&Cell::Card(value)) = moves.get(&Left) {
+            println!("\tL) {value}");
+        }
+        if let Some(&Cell::Card(value)) = moves.get(&Right) {
+            println!("\tR) {value}");
+        }
+        if let Some(&Cell::Card(value)) = moves.get(&Down) {
+            println!("\tD) {value}");
+        }
+        println!("\tQ) Quit");
+        print!("Choose your move: ");
+        io::stdout().flush().unwrap();
+    } else {
+        print!("Unknown move, try again: ");
+        io::stdout().flush().unwrap();
     }
-    if let Some(&Cell::Card(value)) = moves.get(&Left) {
-        println!("\tL) {value}");
-    }
-    if let Some(&Cell::Card(value)) = moves.get(&Right) {
-        println!("\tR) {value}");
-    }
-    if let Some(&Cell::Card(value)) = moves.get(&Down) {
-        println!("\tD) {value}");
-    }
-    println!("\tQ) Quit");
-    print!("Choose your move : ");
-    io::stdout().flush().unwrap();
 
     let mut action = String::new();
     io::stdin().read_line(&mut action).expect("read error");
@@ -201,9 +206,29 @@ fn ask_action(moves: &HashMap<Direction, Cell>) -> Action {
         "D" if moves.contains_key(&Down) => Move(Down),
         "Q" => Quit,
         _ => {
-            println!("Unknown action: {action}");
-            //print!("\x1B[2J\x1B[1;1H");
-            ask_action(moves)
+            if unknown_action(action) {
+                ask_action(moves, true)
+            } else {
+                ask_action(moves, false)
+            }
         }
     }
+}
+
+fn unknown_action(action: String) -> bool {
+    use crossterm::{
+        cursor::MoveToPreviousLine,
+        terminal::{Clear, ClearType},
+        ExecutableCommand,
+    };
+    use std::io::{self, Write};
+
+    let mut stdout = std::io::stdout();
+    stdout.execute(MoveToPreviousLine(1)).unwrap();
+    stdout.execute(Clear(ClearType::CurrentLine)).unwrap();
+    println!("Unknown action: {action}");
+    stdout.execute(MoveToPreviousLine(2)).unwrap();
+    stdout.execute(Clear(ClearType::CurrentLine)).unwrap();
+    io::stdout().flush().unwrap();
+    false
 }

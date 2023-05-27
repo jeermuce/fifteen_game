@@ -1,6 +1,7 @@
 =={{header|Rust}}==
 {{libheader|rand}}
-<syntaxhighlight lang="rust">extern crate rand;
+<syntaxhighlight lang="rust">
+extern crate rand;
  
 use std::collections::HashMap;
 use std::fmt;
@@ -204,4 +205,5 @@ fn ask_action(moves: &HashMap<Direction, Cell>) -> Action {
             ask_action(moves)
         }
     }
-}</syntaxhighlight>
+}
+</syntaxhighlight>
