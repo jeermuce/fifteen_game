@@ -2,6 +2,7 @@ extern crate rand;
 use clearscreen::clear;
 use std::collections::HashMap;
 use std::fmt;
+use std::io::{self, Write};
 
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -167,7 +168,6 @@ fn main() {
 }
 
 fn ask_action(moves: &HashMap<Direction, Cell>, render_list: bool) -> Action {
-    use std::io::{self, Write};
     use Action::*;
     use Direction::*;
 
@@ -203,7 +203,7 @@ fn ask_action(moves: &HashMap<Direction, Cell>, render_list: bool) -> Action {
         "D" if moves.contains_key(&Down) => Move(Down),
         "Q" => Quit,
         _ => {
-            if unknown_action(action) {
+            if unknown_action() {
                 ask_action(moves, true)
             } else {
                 ask_action(moves, false)
@@ -212,20 +212,15 @@ fn ask_action(moves: &HashMap<Direction, Cell>, render_list: bool) -> Action {
     }
 }
 
-fn unknown_action(action: String) -> bool {
+fn unknown_action() -> bool {
     use crossterm::{
         cursor::MoveToPreviousLine,
         terminal::{Clear, ClearType},
         ExecutableCommand,
     };
-    use std::io::{self, Write};
-
-    let mut stdout = std::io::stdout();
-    stdout.execute(MoveToPreviousLine(1)).unwrap();
-    stdout.execute(Clear(ClearType::CurrentLine)).unwrap();
-    println!("Unknown action: {action}");
-    stdout.execute(MoveToPreviousLine(2)).unwrap();
-    stdout.execute(Clear(ClearType::CurrentLine)).unwrap();
-    io::stdout().flush().unwrap();
+    std::io::stdout().execute(MoveToPreviousLine(1)).unwrap();
+    std::io::stdout()
+        .execute(Clear(ClearType::CurrentLine))
+        .unwrap();
     false
 }
